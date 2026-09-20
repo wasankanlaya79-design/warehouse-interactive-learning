@@ -34,12 +34,16 @@ input,textarea,select{width:100%;font:inherit;border:1px solid #c9d6e2;border-ra
 <div class="layout">
 <main>
  <section class="viewer student-only">
-   <div class="pdfbox"><iframe id="pdfFrame" src="warehouse_ch1.pdf#toolbar=1&navpanes=0"></iframe></div>
-   <div class="row" style="margin-top:9px">
-     <button class="white" onclick="document.getElementById('localPdf').click()">เปิด PDF จากเครื่อง</button>
-     <input id="localPdf" type="file" accept="application/pdf" style="display:none" onchange="openLocalPdf(event)">
-     <span class="small" style="color:#d5e5f4">หากยังไม่มี warehouse_ch1.pdf ใน GitHub สามารถเลือกไฟล์จากเครื่องเพื่อเรียนได้</span>
-   </div>
+   <div class="row" style="margin-bottom:10px">
+  <button class="white chapterBtn" data-ch="1" onclick="openChapter(1)">บทที่ 1 พื้นฐานการจัดการคลังสินค้า</button>
+  <button class="white chapterBtn" data-ch="2" onclick="openChapter(2)">บทที่ 2 ประเภทคลังสินค้า</button>
+  <button class="white chapterBtn" data-ch="3" onclick="openChapter(3)">บทที่ 3 กระบวนการจัดการคลังสินค้า</button>
+  <button class="white chapterBtn" data-ch="4" onclick="openChapter(4)">บทที่ 4 ระบบการเก็บรักษาสินค้า</button>
+</div>
+<div class="pdfbox"><iframe id="pdfFrame" src="lessons/chapter1.pdf#toolbar=1&navpanes=0"></iframe></div>
+<div class="row" style="margin-top:9px">
+  <span class="small" style="color:#d5e5f4">บทเรียนเปิดจากไฟล์ที่ฝังอยู่ในเว็บไซต์โดยตรง นักศึกษาไม่ต้องเลือกไฟล์จากเครื่อง</span>
+</div>
  </section>
 
  <section id="extraContent" class="student-only"></section>
@@ -110,7 +114,17 @@ function getContent(){try{return JSON.parse(localStorage.getItem("wh_content")||
 function getActs(){try{return JSON.parse(localStorage.getItem("wh_customActs")||"[]")}catch{return[]}}
 function allActs(){return [...baseActivities,...getActs()]}
 function saveArr(k,v){localStorage.setItem(k,JSON.stringify(v))}
-function openLocalPdf(e){const f=e.target.files[0];if(f)$("pdfFrame").src=URL.createObjectURL(f)}
+const chapterFiles={
+1:"lessons/chapter1.pdf",
+2:"lessons/chapter2.pdf",
+3:"lessons/chapter3.pdf",
+4:"lessons/chapter4.pdf"
+};
+function openChapter(n){
+ localStorage.setItem("wh_chapter",String(n));
+ $("pdfFrame").src=chapterFiles[n]+"#toolbar=1&navpanes=0";
+ document.querySelectorAll(".chapterBtn").forEach(b=>b.style.outline=b.dataset.ch==String(n)?"3px solid #f57c00":"none");
+}
 function renderExtra(){const c=getContent();$("extraContent").innerHTML=c.length?'<div class="panel" style="margin-top:15px"><h2>เนื้อหาเพิ่มเติมจากอาจารย์</h2>'+c.map(x=>'<div class="item"><h3>'+esc(x.title)+'</h3><div style="white-space:pre-wrap;line-height:1.6">'+esc(x.body)+'</div></div>').join("")+"</div>":""}
 function ansKey(aid,i){return "wh_ans_"+aid+"_"+i}
 function protect(el){["paste","drop"].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();pasteAttempts++;localStorage.setItem("wh_paste",pasteAttempts);$("pasteCount").textContent=pasteAttempts;toast("กรุณาพิมพ์คำตอบด้วยตนเอง")}));el.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==="v"){e.preventDefault();pasteAttempts++;localStorage.setItem("wh_paste",pasteAttempts);$("pasteCount").textContent=pasteAttempts;toast("ไม่อนุญาตให้วางข้อความ")}});el.addEventListener("contextmenu",e=>e.preventDefault())}
@@ -130,7 +144,7 @@ function exportCourse(){let d={version:1,content:getContent(),activities:getActs
 function importCourse(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);saveArr("wh_content",d.content||[]);saveArr("wh_customActs",d.activities||[]);renderManage();toast("Import สำเร็จ")}catch{alert("ไฟล์ JSON ไม่ถูกต้อง")}};r.readAsText(f)}
 function resetTeacher(){if(confirm("ล้างเนื้อหาและกิจกรรมที่เพิ่มทั้งหมด?")){localStorage.removeItem("wh_content");localStorage.removeItem("wh_customActs");renderManage()}}
 function printAll(){let name=localStorage.getItem("wh_studentName")||"",sid=localStorage.getItem("wh_studentId")||"",grp=localStorage.getItem("wh_studentGroup")||"",dt=localStorage.getItem("wh_learnDate")||"";let h='<h1>บทที่ 1 พื้นฐานการจัดการคลังสินค้า — แบบฝึกหัด</h1><div><b>ชื่อ:</b> '+esc(name)+' &nbsp; <b>รหัส:</b> '+esc(sid)+'<br><b>กลุ่ม:</b> '+esc(grp)+' &nbsp; <b>วันที่:</b> '+esc(dt)+'</div>';allActs().forEach(a=>{h+='<h2>'+esc(a.title)+'</h2><div><i>'+esc(a.prompt)+'</i></div>';a.questions.forEach((q,i)=>{h+='<div class="pq"><b>'+(i+1)+') '+esc(q)+'</b><div class="answer">'+esc(localStorage.getItem(ansKey(a.id,i))||"— ยังไม่ได้ตอบ —")+'</div></div>'})});h+='<hr><div class="small">บันทึกระบบ: พยายาม Paste/Drop '+pasteAttempts+' ครั้ง</div>';$("printReport").innerHTML=h;setTimeout(()=>window.print(),100)}
-renderExtra();renderList();renderActivity();renderManage();
+openChapter(Number(localStorage.getItem("wh_chapter")||1));renderExtra();renderList();renderActivity();renderManage();
 </script>
 </body>
 </html>
