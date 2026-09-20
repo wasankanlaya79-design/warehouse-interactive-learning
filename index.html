@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warehouse Interactive Learning</title>
+<style>
+:root{--navy:#0b2f59;--blue:#174f86;--orange:#f57c00;--bg:#edf3f8;--ink:#183047;--muted:#6b7d8d;--green:#17834b}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,"Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:30;background:linear-gradient(90deg,var(--navy),#174f86);color:#fff;padding:10px 16px;display:flex;gap:8px;align-items:center;box-shadow:0 3px 14px #0002}
+.brand{font-weight:900;flex:1}.brand small{display:block;font-weight:400;opacity:.86}
+button,.btn{font:inherit;border:0;border-radius:10px;padding:9px 13px;cursor:pointer;font-weight:700}.white{background:#fff;color:var(--navy)}.orange{background:var(--orange);color:#fff}.ghost{background:#ffffff18;color:#fff;border:1px solid #ffffff44}
+.layout{max-width:1500px;margin:auto;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:16px}
+.card,.panel{background:#fff;border-radius:16px;padding:16px;box-shadow:0 6px 20px #17324a14}h2,h3{margin:0 0 10px;color:var(--navy)}
+.viewer{background:#071522;border-radius:16px;padding:12px}.pdfbox{height:70vh;background:#fff;border-radius:10px;overflow:hidden}.pdfbox iframe{width:100%;height:100%;border:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}label{display:block;font-size:.85rem;font-weight:700;color:var(--muted);margin:4px 0}
+input,textarea,select{width:100%;font:inherit;border:1px solid #c9d6e2;border-radius:9px;padding:9px;background:#fbfdff}textarea{min-height:105px;resize:vertical;line-height:1.55}
+.side{display:flex;flex-direction:column;gap:12px}.activity-list{display:flex;flex-direction:column;gap:8px}.act{background:#f5f8fb;border:1px solid #d9e4ec;text-align:left;color:var(--ink)}.act.sel{border-color:var(--orange)}.badge{font-size:.72rem;background:#e8eef4;padding:2px 7px;border-radius:99px}
+.activity-card{margin-top:15px;background:#fff;border-radius:16px;padding:20px;box-shadow:0 7px 24px #17324a15;border-top:5px solid var(--orange)}.notice{background:#fff5e7;border:1px solid #ffd7a0;color:#724500;border-radius:10px;padding:10px;line-height:1.5}.q{margin:14px 0}.q b{display:block;margin-bottom:6px}.small{font-size:.82rem;color:var(--muted)}
+.teacher{display:none}body.teacher-mode .teacher{display:block}body.teacher-mode .student-only{display:none}.teacher-tools{background:#fff;border:2px dashed #9db6c9;border-radius:16px;padding:16px}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.tab{background:#eaf0f6;color:#28445e}.tab.active{background:var(--navy);color:#fff}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.item{border:1px solid #dae5ed;border-radius:10px;padding:10px;margin-top:8px;background:#fafcfe}.danger{background:#f7e5e4;color:#84211c}.green{background:#e4f5eb;color:#12663a}
+#printReport{display:none}#toast{position:fixed;right:18px;bottom:18px;background:#102b46;color:#fff;padding:11px 15px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none}#toast.show{opacity:1}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.side{order:-1}.pdfbox{height:55vh}}
+@media print{@page{size:A4;margin:13mm}header,.viewer,.side,.activity-card,.teacher,#toast{display:none!important}.layout{display:block;padding:0}#printReport{display:block!important}#printReport h1{font-size:18pt;color:#0b2f59}#printReport h2{font-size:14pt;color:#0b2f59;border-bottom:1px solid #aaa;padding-bottom:2mm;margin-top:7mm}.answer{border:1px solid #999;border-radius:4px;min-height:14mm;padding:3mm;white-space:pre-wrap;margin:2mm 0 4mm}.pq{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">บทที่ 1 พื้นฐานการจัดการคลังสินค้า<small>Interactive Learning • แบบฝึกหัด • เพิ่มเนื้อหาได้</small></div>
+ <button class="ghost" onclick="toggleTeacher()">โหมดอาจารย์</button>
+ <button class="orange student-only" onclick="printAll()">พิมพ์ / PDF</button>
+</header>
+
+<div class="layout">
+<main>
+ <section class="viewer student-only">
+   <div class="pdfbox"><iframe id="pdfFrame" src="warehouse_ch1.pdf#toolbar=1&navpanes=0"></iframe></div>
+   <div class="row" style="margin-top:9px">
+     <button class="white" onclick="document.getElementById('localPdf').click()">เปิด PDF จากเครื่อง</button>
+     <input id="localPdf" type="file" accept="application/pdf" style="display:none" onchange="openLocalPdf(event)">
+     <span class="small" style="color:#d5e5f4">หากยังไม่มี warehouse_ch1.pdf ใน GitHub สามารถเลือกไฟล์จากเครื่องเพื่อเรียนได้</span>
+   </div>
+ </section>
+
+ <section id="extraContent" class="student-only"></section>
+ <section id="activityPanel" class="student-only"></section>
+
+ <section class="teacher teacher-tools">
+   <h2>โหมดอาจารย์: เพิ่ม / แก้ไขเนื้อหา</h2>
+   <div class="tabs">
+     <button class="tab active" id="t1" onclick="tab(1)">เพิ่มเนื้อหา</button>
+     <button class="tab" id="t2" onclick="tab(2)">เพิ่มกิจกรรม</button>
+     <button class="tab" id="t3" onclick="tab(3)">สำรองข้อมูล</button>
+   </div>
+   <div id="tab1">
+     <label>หัวข้อ</label><input id="cTitle" placeholder="เช่น ตัวอย่างจากโรงงานจริง">
+     <label>เนื้อหาเพิ่มเติม</label><textarea id="cBody" placeholder="พิมพ์หรือวางเนื้อหาได้"></textarea>
+     <button class="orange" onclick="addContent()">เพิ่มเนื้อหา</button>
+     <div id="contentManage"></div>
+   </div>
+   <div id="tab2" style="display:none">
+     <label>ชื่อกิจกรรม</label><input id="aTitle" placeholder="เช่น Workshop: วิเคราะห์ Layout">
+     <label>คำชี้แจง</label><textarea id="aPrompt"></textarea>
+     <label>คำถาม (1 บรรทัด = 1 ข้อ)</label><textarea id="aQuestions"></textarea>
+     <button class="orange" onclick="addActivity()">เพิ่มกิจกรรม</button>
+     <div id="activityManage"></div>
+   </div>
+   <div id="tab3" style="display:none">
+     <p class="small">Export / Import จะสำรองเฉพาะเนื้อหาและกิจกรรมที่อาจารย์เพิ่ม ไม่รวมคำตอบนักศึกษา</p>
+     <div class="row">
+       <button class="green" onclick="exportCourse()">Export JSON</button>
+       <label class="btn white">Import JSON<input type="file" accept=".json" style="display:none" onchange="importCourse(event)"></label>
+       <button class="danger" onclick="resetTeacher()">ล้างข้อมูลที่เพิ่ม</button>
+     </div>
+   </div>
+ </section>
+ <div id="printReport"></div>
+</main>
+
+<aside class="side student-only">
+ <section class="card">
+  <h3>ข้อมูลนักศึกษา</h3>
+  <div class="grid2">
+   <div><label>ชื่อ–นามสกุล</label><input id="studentName" data-student></div>
+   <div><label>รหัสนักศึกษา</label><input id="studentId" data-student></div>
+   <div><label>กลุ่ม / ห้อง</label><input id="studentGroup" data-student></div>
+   <div><label>วันที่เรียน</label><input id="learnDate" data-student placeholder="วว/ดด/ปปปป"></div>
+  </div>
+ </section>
+ <section class="card"><h3>กิจกรรมระหว่างเรียน</h3><div id="activityList" class="activity-list"></div></section>
+ <section class="card"><h3>กติกาการตอบ</h3><div class="notice"><b>ต้องพิมพ์ด้วยตนเอง</b><br>ช่องคำตอบบล็อก Paste / Drop / Ctrl+V / Cmd+V และบันทึกจำนวนครั้งที่พยายามวางข้อความ</div><p class="small">พยายาม Paste: <b id="pasteCount">0</b> ครั้ง</p></section>
+</aside>
+</div>
+<div id="toast"></div>
+
+<script>
+const baseActivities=[
+{id:"act1",title:"กิจกรรมที่ 1: Warehouse ใน Supply Chain",prompt:"อธิบายด้วยภาษาของตนเองว่า คลังสินค้าอยู่ตรงไหนใน Supply Chain และช่วยธุรกิจอย่างไร",questions:["จาก Supplier → Manufacturer → Warehouse → Distribution → Customer คลังสินค้ามีบทบาทอะไรบ้าง? (อย่างน้อย 3 บทบาท)","เปรียบเทียบ Warehouse กับ Distribution Center โดยยกตัวอย่างธุรกิจจริง 1 ธุรกิจ","หากธุรกิจไม่มีคลังสินค้า ปัญหาใดอาจเกิดขึ้นกับลูกค้าและการผลิต?"]},
+{id:"act2",title:"กิจกรรมที่ 2: Supply Chain Mapping",prompt:"เลือกสินค้า 1 ชนิด แล้วอธิบาย Supply Chain ตั้งแต่ต้นน้ำถึงลูกค้า",questions:["สินค้าที่เลือกคืออะไร? ระบุ Supplier, Production, Warehouse, Transportation และ Customer","จุดใดมีโอกาสเกิด Waiting มากที่สุด? เพราะอะไร?","คลังสินค้าควรตั้งอยู่ตรงจุดใด และเพราะเหตุใด?"]},
+{id:"act3",title:"กิจกรรมที่ 3: เลือกประเภทคลังสินค้า",prompt:"เลือกธุรกิจ 1 ประเภท แล้วเลือกคลังสินค้าที่เหมาะสม",questions:["ธุรกิจที่เลือกและลักษณะสินค้าคืออะไร?","ควรใช้คลังประเภทใด? อธิบายเหตุผล","สินค้ามีข้อกำหนดด้านอุณหภูมิ Lot/Batch, FIFO/FEFO หรือความเร็วในการจ่ายสินค้าอย่างไร?"]},
+{id:"act4",title:"กิจกรรมที่ 4: วิเคราะห์ Warehouse Process",prompt:"วิเคราะห์ Receiving → Inspection → Put-away → Storage → Picking → Packing → Shipping",questions:["ขั้นตอนไหนมีโอกาสเกิดความผิดพลาดมากที่สุด? เพราะอะไร?","ยกตัวอย่างความสูญเปล่าจากการเดิน การค้นหา หรือการรอคอย","เสนอวิธีปรับปรุง Flow อย่างน้อย 2 วิธี"]},
+{id:"act5",title:"กิจกรรมที่ 5: Storage & Location",prompt:"เลือกวิธีจัดเก็บและการกำหนด Location ให้เหมาะกับสินค้า",questions:["เปรียบเทียบระบบจัดเก็บอย่างน้อย 2 ระบบที่เหมาะกับธุรกิจของคุณ","ออกแบบ Location Code โดยใช้ Warehouse → Zone → Aisle → Rack → Level → Bin","Fixed Location กับ Random Location ต่างกันอย่างไร?","สินค้า A, B, C ตาม ABC Classification ควรวางตรงไหน?"]},
+{id:"act6",title:"กิจกรรมที่ 6: Layout + 7 Wastes + Mini Case",prompt:"ใช้หลัก 7 Wastes เพื่อเสนอแนวทางปรับปรุง",questions:["Stock ในระบบ 1,000 ชิ้น แต่ของจริง 950 ชิ้น สาเหตุที่เป็นไปได้มีอะไรบ้าง?","ระบุ Waste อย่างน้อย 3 ประเภท","ถ้าสินค้า Fast Moving อยู่ท้ายคลังและไม่มี Location Code จะปรับอย่างไร?","เสนอ KPI 3 ตัวเพื่อวัดผลหลังปรับปรุง"]},
+{id:"final",title:"แบบฝึกหัดท้ายบท: ออกแบบคลังสินค้าของคุณ",prompt:"ออกแบบคลังสินค้าสำหรับสินค้า 1 ประเภท โดยเชื่อมโยงความรู้ทั้งบท",questions:["ชื่อสินค้า / ธุรกิจ และลักษณะสำคัญ","Supplier และแหล่งที่มา","พื้นที่หลัก: Receiving, Storage, Picking, Packing, Shipping","ระบบจัดเก็บที่เลือกและเหตุผล","Location Code อย่างน้อย 3 ตำแหน่ง","อธิบาย Material Flow","ระบุ Waste อย่างน้อย 3 ประเภทพร้อมแนวทางลด","สรุปแนวคิดการออกแบบคลังของคุณ 5–8 บรรทัด"]}
+];
+const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+let activityId=localStorage.getItem("wh_act")||"act1", pasteAttempts=Number(localStorage.getItem("wh_paste")||0),teacher=false;
+function toast(s){let t=$("toast");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1500)}
+function getContent(){try{return JSON.parse(localStorage.getItem("wh_content")||"[]")}catch{return[]}}
+function getActs(){try{return JSON.parse(localStorage.getItem("wh_customActs")||"[]")}catch{return[]}}
+function allActs(){return [...baseActivities,...getActs()]}
+function saveArr(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function openLocalPdf(e){const f=e.target.files[0];if(f)$("pdfFrame").src=URL.createObjectURL(f)}
+function renderExtra(){const c=getContent();$("extraContent").innerHTML=c.length?'<div class="panel" style="margin-top:15px"><h2>เนื้อหาเพิ่มเติมจากอาจารย์</h2>'+c.map(x=>'<div class="item"><h3>'+esc(x.title)+'</h3><div style="white-space:pre-wrap;line-height:1.6">'+esc(x.body)+'</div></div>').join("")+"</div>":""}
+function ansKey(aid,i){return "wh_ans_"+aid+"_"+i}
+function protect(el){["paste","drop"].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();pasteAttempts++;localStorage.setItem("wh_paste",pasteAttempts);$("pasteCount").textContent=pasteAttempts;toast("กรุณาพิมพ์คำตอบด้วยตนเอง")}));el.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==="v"){e.preventDefault();pasteAttempts++;localStorage.setItem("wh_paste",pasteAttempts);$("pasteCount").textContent=pasteAttempts;toast("ไม่อนุญาตให้วางข้อความ")}});el.addEventListener("contextmenu",e=>e.preventDefault())}
+function renderList(){let l=$("activityList");l.innerHTML="";allActs().forEach(a=>{let b=document.createElement("button");b.className="act"+(activityId===a.id?" sel":"");b.innerHTML="<b>"+esc(a.title)+"</b>";b.onclick=()=>{activityId=a.id;localStorage.setItem("wh_act",a.id);renderActivity();renderList()};l.appendChild(b)})}
+function renderActivity(){const a=allActs().find(x=>x.id===activityId)||allActs()[0];$("activityPanel").innerHTML='<div class="activity-card"><h2>'+esc(a.title)+'</h2><div class="notice">'+esc(a.prompt)+'</div>'+a.questions.map((q,i)=>'<div class="q"><b>'+(i+1)+') '+esc(q)+'</b><textarea id="ans_'+i+'" placeholder="พิมพ์คำตอบด้วยตนเอง..."></textarea><div class="small"><span id="cnt_'+i+'">0</span> ตัวอักษร</div></div>').join("")+"</div>";a.questions.forEach((q,i)=>{let el=$("ans_"+i),k=ansKey(a.id,i);el.value=localStorage.getItem(k)||"";$("cnt_"+i).textContent=el.value.length;protect(el);el.addEventListener("input",()=>{localStorage.setItem(k,el.value);$("cnt_"+i).textContent=el.value.length})})}
+document.querySelectorAll("[data-student]").forEach(el=>{let k="wh_"+el.id;el.value=localStorage.getItem(k)||"";el.addEventListener("input",()=>localStorage.setItem(k,el.value))});$("pasteCount").textContent=pasteAttempts;
+function toggleTeacher(){teacher=!teacher;document.body.classList.toggle("teacher-mode",teacher);if(teacher)renderManage();else{renderExtra();renderList();renderActivity()}}
+function tab(n){[1,2,3].forEach(i=>{$("tab"+i).style.display=i===n?"block":"none";$("t"+i).classList.toggle("active",i===n)})}
+function addContent(){let title=$("cTitle").value.trim(),body=$("cBody").value.trim();if(!title||!body){toast("กรอกหัวข้อและเนื้อหา");return}let a=getContent();a.push({id:"c"+Date.now(),title,body});saveArr("wh_content",a);$("cTitle").value="";$("cBody").value="";renderManage();toast("เพิ่มเนื้อหาแล้ว")}
+function delContent(id){if(confirm("ลบเนื้อหานี้?")){saveArr("wh_content",getContent().filter(x=>x.id!==id));renderManage()}}
+function editContent(id){let a=getContent(),x=a.find(v=>v.id===id);if(!x)return;$("cTitle").value=x.title;$("cBody").value=x.body;saveArr("wh_content",a.filter(v=>v.id!==id));renderManage()}
+function addActivity(){let title=$("aTitle").value.trim(),prompt=$("aPrompt").value.trim(),questions=$("aQuestions").value.split(/\n+/).map(x=>x.trim()).filter(Boolean);if(!title||!prompt||!questions.length){toast("กรอกชื่อ คำชี้แจง และคำถาม");return}let a=getActs();a.push({id:"custom_"+Date.now(),title,prompt,questions});saveArr("wh_customActs",a);$("aTitle").value="";$("aPrompt").value="";$("aQuestions").value="";renderManage();toast("เพิ่มกิจกรรมแล้ว")}
+function delActivity(id){if(confirm("ลบกิจกรรมนี้?")){saveArr("wh_customActs",getActs().filter(x=>x.id!==id));renderManage()}}
+function editActivity(id){let a=getActs(),x=a.find(v=>v.id===id);if(!x)return;$("aTitle").value=x.title;$("aPrompt").value=x.prompt;$("aQuestions").value=x.questions.join("\n");saveArr("wh_customActs",a.filter(v=>v.id!==id));renderManage();tab(2)}
+function renderManage(){$("contentManage").innerHTML=getContent().map(x=>'<div class="item"><b>'+esc(x.title)+'</b><div class="small">'+esc(x.body).slice(0,120)+'</div><div class="row"><button class="white" onclick="editContent(\''+x.id+'\')">แก้ไข</button><button class="danger" onclick="delContent(\''+x.id+'\')">ลบ</button></div></div>').join("")||'<p class="small">ยังไม่มีเนื้อหาเพิ่ม</p>';$("activityManage").innerHTML=getActs().map(x=>'<div class="item"><b>'+esc(x.title)+'</b><div class="small">'+x.questions.length+' คำถาม</div><div class="row"><button class="white" onclick="editActivity(\''+x.id+'\')">แก้ไข</button><button class="danger" onclick="delActivity(\''+x.id+'\')">ลบ</button></div></div>').join("")||'<p class="small">ยังไม่มีกิจกรรมเพิ่ม</p>'}
+function exportCourse(){let d={version:1,content:getContent(),activities:getActs()},b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="warehouse_course.json";a.click()}
+function importCourse(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);saveArr("wh_content",d.content||[]);saveArr("wh_customActs",d.activities||[]);renderManage();toast("Import สำเร็จ")}catch{alert("ไฟล์ JSON ไม่ถูกต้อง")}};r.readAsText(f)}
+function resetTeacher(){if(confirm("ล้างเนื้อหาและกิจกรรมที่เพิ่มทั้งหมด?")){localStorage.removeItem("wh_content");localStorage.removeItem("wh_customActs");renderManage()}}
+function printAll(){let name=localStorage.getItem("wh_studentName")||"",sid=localStorage.getItem("wh_studentId")||"",grp=localStorage.getItem("wh_studentGroup")||"",dt=localStorage.getItem("wh_learnDate")||"";let h='<h1>บทที่ 1 พื้นฐานการจัดการคลังสินค้า — แบบฝึกหัด</h1><div><b>ชื่อ:</b> '+esc(name)+' &nbsp; <b>รหัส:</b> '+esc(sid)+'<br><b>กลุ่ม:</b> '+esc(grp)+' &nbsp; <b>วันที่:</b> '+esc(dt)+'</div>';allActs().forEach(a=>{h+='<h2>'+esc(a.title)+'</h2><div><i>'+esc(a.prompt)+'</i></div>';a.questions.forEach((q,i)=>{h+='<div class="pq"><b>'+(i+1)+') '+esc(q)+'</b><div class="answer">'+esc(localStorage.getItem(ansKey(a.id,i))||"— ยังไม่ได้ตอบ —")+'</div></div>'})});h+='<hr><div class="small">บันทึกระบบ: พยายาม Paste/Drop '+pasteAttempts+' ครั้ง</div>';$("printReport").innerHTML=h;setTimeout(()=>window.print(),100)}
+renderExtra();renderList();renderActivity();renderManage();
+</script>
+</body>
+</html>
