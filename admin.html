@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>ผู้ดูแลระบบ · ห้องเรียนออนไลน์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/app.css">
+<style>
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:18px;
+  position:sticky;top:0;height:100vh;overflow:auto}
+.nav{display:grid;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);color:var(--ink-2);text-decoration:none;font-weight:500;font-size:.93rem}
+.nav a svg{width:18px;height:18px;flex:none;opacity:.85}
+.nav a:hover{background:var(--line-2)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.nav a .badge{margin-left:auto}
+.side-foot{margin-top:auto;border-top:1px solid var(--line-2);padding-top:14px;display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;flex:none}
+.content{padding:28px 32px 64px;display:grid;gap:22px;align-content:start;max-width:1280px;width:100%}
+.page-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.mobilebar{display:none}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:260px;z-index:50;transform:translateX(-100%);transition:transform .2s;box-shadow:var(--shadow)}
+  .side.open{transform:none}
+  .mobilebar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));
+    background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+  .content{padding:20px 16px 56px}
+}
+.course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.course-tile{padding:18px;display:grid;gap:10px;text-decoration:none;color:inherit;transition:border-color .15s}
+.course-tile:hover{border-color:var(--accent)}
+.stats{display:flex;gap:16px;font-size:.86rem;color:var(--muted)}
+.stats b{color:var(--ink);font-family:var(--mono);font-weight:500}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{font:inherit;font-weight:500;background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.chrow{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line-2)}
+.chrow:last-child{border-bottom:0}
+.pos{width:32px;height:32px;border-radius:8px;background:var(--line-2);display:grid;place-items:center;font-family:var(--mono);font-size:.88rem}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+@media (max-width:640px){.chrow{grid-template-columns:32px 1fr}.chrow>.row{grid-column:2}}
+.matrix td,.matrix th{text-align:center;padding:8px 10px}
+.matrix td:first-child,.matrix th:first-child,.matrix td:nth-child(2),.matrix th:nth-child(2){text-align:left}
+.cell{font-family:var(--mono);font-size:.84rem;border-radius:6px;padding:3px 6px;display:inline-flex;gap:4px;align-items:center;cursor:pointer;border:0;background:none;color:inherit}
+.cell:hover{background:var(--line-2)}
+.cell.ok{color:var(--ok);font-weight:500}.cell.mid{color:var(--warn)}.cell.none{color:var(--muted)}
+.cell .flag{width:6px;height:6px;border-radius:50%;background:var(--danger)}
+.na{color:var(--line)}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.shot{overflow:hidden;display:grid}
+.shot img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#000;cursor:zoom-in}
+.shot div{padding:8px 10px;display:grid;gap:2px;font-size:.8rem}
+.hbar{display:grid;grid-template-columns:minmax(0,1fr) 140px 64px;gap:12px;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line-2)}
+.hbar:last-child{border-bottom:0}
+@media (max-width:640px){.hbar{grid-template-columns:1fr 80px 50px}}
+.steps{margin:0;padding-left:1.2em;display:grid;gap:4px;font-size:.88rem;color:var(--ink-2)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.seg label{padding:7px 12px;cursor:pointer;font-size:.9rem;display:flex;gap:6px;align-items:center}
+.seg label:has(input:checked){background:var(--accent-soft);color:var(--accent)}
+.seg input{display:none}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading"><div class="spinner"></div></div></div>
+<script src="/assets/core.js"></script>
+<script src="/assets/admin.js"></script>
+</body>
+</html>
